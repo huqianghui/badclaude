@@ -60,9 +60,12 @@ function refocusPreviousApp() {
 function createTrayIconFallback() {
   const p = path.join(__dirname, 'icon', 'Template.png');
   if (fs.existsSync(p)) {
-    const img = nativeImage.createFromPath(p);
+    let img = nativeImage.createFromPath(p);
     if (!img.isEmpty()) {
-      if (process.platform === 'darwin') img.setTemplateImage(true);
+      if (process.platform === 'darwin') {
+        img = img.resize({ width: 22, height: 22 });
+        img.setTemplateImage(true);
+      }
       return img;
     }
   }
@@ -90,25 +93,6 @@ async function getTrayIcon() {
     return createTrayIconFallback();
   }
   if (process.platform === 'darwin') {
-    const file = path.join(iconDir, 'AppIcon.icns');
-    if (fs.existsSync(file)) {
-      const fromPath = nativeImage.createFromPath(file);
-      if (!fromPath.isEmpty()) return fromPath;
-      try {
-        const t = await tryIcnsTrayImage(file);
-        if (t) return t;
-      } catch (e) {
-        console.warn('AppIcon.icns Quick Look thumbnail failed:', e?.message || e);
-      }
-      const tmp = path.join(os.tmpdir(), 'badclaude-tray.icns');
-      try {
-        fs.copyFileSync(file, tmp);
-        const t = await tryIcnsTrayImage(tmp);
-        if (t) return t;
-      } catch (e) {
-        console.warn('AppIcon.icns temp copy + thumbnail failed:', e?.message || e);
-      }
-    }
     return createTrayIconFallback();
   }
   return createTrayIconFallback();
