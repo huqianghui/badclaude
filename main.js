@@ -231,7 +231,7 @@ function sendMacroMac(text) {
 
   execFile('osascript', ['-e', step1], err => {
     if (err) console.warn('Ctrl+C failed:', err.message);
-    // Step 2: paste text via clipboard + Enter
+    // Step 2: paste text via clipboard
     setTimeout(() => {
       const { execFileSync } = require('child_process');
       try {
@@ -240,15 +240,24 @@ function sendMacroMac(text) {
         console.warn('pbcopy failed:', e.message);
         return;
       }
-      const step2 = [
+      const paste = [
         'tell application "System Events"',
         '  key code 9 using {command down}', // Cmd+V paste
-        '  delay 0.1',
-        '  key code 36', // Enter
         'end tell'
       ].join('\n');
-      execFile('osascript', ['-e', step2], err => {
-        if (err) console.warn('paste+enter failed:', err.message);
+      execFile('osascript', ['-e', paste], err => {
+        if (err) console.warn('paste failed:', err.message);
+        // Step 3: Enter after paste completes
+        setTimeout(() => {
+          const enter = [
+            'tell application "System Events"',
+            '  key code 36', // Enter
+            'end tell'
+          ].join('\n');
+          execFile('osascript', ['-e', enter], err => {
+            if (err) console.warn('enter failed:', err.message);
+          });
+        }, 200);
       });
     }, 300);
   });
